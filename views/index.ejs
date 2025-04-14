@@ -1,11 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pencarian Produk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    Hello world!
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center">Pencarian Produk</h1>
+
+    <!-- Filter & Pencarian -->
+    <div class="bg-white p-6 rounded-2xl shadow-md mb-6">
+      <form id="searchForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div>
+          <label for="query" class="block mb-1 text-sm font-semibold">Keyword</label>
+          <input 
+            type="text" 
+            id="query" 
+            placeholder="Nama, kategori, deskripsi..." 
+            class="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+        <div>
+          <label for="category" class="block mb-1 text-sm font-semibold">Kategori</label>
+          <select id="category" class="w-full p-3 rounded-xl border border-gray-300">
+            <option value="">Semua Kategori</option>
+            <option value="Elektronik">Elektronik</option>
+            <option value="Pakaian">Pakaian</option>
+            <option value="Makanan">Makanan</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="sort" class="block mb-1 text-sm font-semibold">Sortir</label>
+          <select id="sort" class="w-full p-3 rounded-xl border border-gray-300">
+            <option value="">--</option>
+            <option value="price_asc">Harga Termurah</option>
+            <option value="price_desc">Harga Termahal</option>
+            <option value="stock_desc">Stok Terbanyak</option>
+          </select>
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full bg-blue-600 text-white py-3 px-4 rounded-xl hover:bg-blue-700 transition"
+        >
+          Cari
+        </button>
+      </form>
+    </div>
+
+    <!-- Aggregasi -->
+    <div id="aggregation" class="grid md:grid-cols-3 gap-4 mb-6 text-sm">
+      <!-- Diisi via JS -->
+    </div>
+
+    <!-- Hasil Pencarian -->
+    <div id="results" class="grid md:grid-cols-2 gap-6">
+      <!-- Produk ditampilkan via JS -->
+    </div>
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-8" id="pagination">
+        <button id="prevBtn" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-xl hover:bg-gray-400 disabled:opacity-50" disabled>Sebelumnya</button>
+        <span id="pageInfo" class="text-sm text-gray-600"></span>
+        <button id="nextBtn" class="bg-blue-600 text-white py-2 px-4 rounded-xl hover:bg-blue-700 disabled:opacity-50">Berikutnya</button>
+  </div>
+  
+  </div>
+
+  <script>
+    const form = document.getElementById('searchForm');
+    const resultsDiv = document.getElementById('results');
+    const aggDiv = document.getElementById('aggregation');
+
+    let currentPage = 1;
+let hasNextPage = false;
+
+async function fetchResults() {
+  const query = document.getElementById('query').value;
+  const category = document.getElementById('category').value;
+  const sort = document.getElementById('sort').value;
+
+  const params = new URLSearchParams({
+    q: query,
+    category,
+    sort,
+    page: currentPage
+  });
+
+  const res = await fetch(`http://localhost:3000/search?${params}`);
+  const { products, aggregations, pagination } = await res.json();
+
+  // Aggregasi (sama seperti sebelumnya)
+  aggDiv.innerHTML = `
+    <div class="bg-white p-4 rounded-xl shadow">
+      <h3 class="font-semibold mb-1">Total Produk Tersedia</h3>
+      <p>${aggregations.total_in_stock}</p>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow">
+      <h3 class="font-semibold mb-1">Jumlah Produk per Kategori</h3>
+      <ul class="list-disc list-inside text-gray-600">
+        ${aggregations.count_by_category.map(c => `<li>${c.key}: ${c.doc_count}</li>`).join("")}
+      </ul>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow">
+      <h3 class="font-semibold mb-1">Rata-Rata Harga per Kategori</h3>
+      <ul class="list-disc list-inside text-gray-600">
+        ${aggregations.avg_price_by_category.map(p => `<li>${p.key}: Rp ${p.avg_price.toLocaleString()}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+
+  // Hasil Produk
+  resultsDiv.innerHTML = '';
+  if (products.length === 0) {
+    resultsDiv.innerHTML = '<p class="text-center text-gray-500">Tidak ada produk ditemukan.</p>';
+  } else {
+    products.forEach(product => {
+      const card = document.createElement('div');
+      card.className = "bg-white p-6 rounded-2xl shadow-md";
+      card.innerHTML = `
+        <h2 class="text-xl font-semibold mb-1">${product.name}</h2>
+        <p class="text-gray-600 text-sm mb-2">${product.category}</p>
+        <p class="text-gray-800 mb-2">${product.description}</p>
+        <div class="text-sm text-gray-700">Harga: <strong>Rp ${product.price.toLocaleString()}</strong></div>
+        <div class="text-sm ${product.in_stock ? 'text-green-600' : 'text-red-600'}">
+          ${product.in_stock ? 'Tersedia' : 'Stok Habis'}
+        </div>
+      `;
+      resultsDiv.appendChild(card);
+    });
+  }
+
+  // Pagination state
+  hasNextPage = pagination.hasNext;
+  document.getElementById("pageInfo").textContent = `Halaman ${pagination.page} dari ${pagination.totalPages}`;
+  document.getElementById("prevBtn").disabled = currentPage === 1;
+  document.getElementById("nextBtn").disabled = !hasNextPage;
+}
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  currentPage = 1;
+  fetchResults();
+});
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    fetchResults();
+  }
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+  if (hasNextPage) {
+    currentPage++;
+    fetchResults();
+  }
+});
+
+  </script>
 </body>
 </html>
