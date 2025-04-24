@@ -24,12 +24,37 @@ export const getDoc = async (id) => {
   }
 };
 
-export const searchDoc = async (id) => {
+export const searchDoc = async (query) => {
   try {
-    throw new Error("Function not finished yet");
-    await client.search({});
+    const result = await client.search({
+      index,
+      body: {
+        query: {
+          bool: {
+            should: [
+              { match: { name: { query, fuzziness: "AUTO" } } },
+              { match: { description: { query, fuzziness: "AUTO" } } },
+              { match: { category: { query, fuzziness: "AUTO" } } },
+            ],
+          },
+        },
+      },
+    });
+
+    const data = result.body.hits.hits.map((hit) => hit._source);
+
+    return {
+      success: true,
+      message: "",
+      data,
+    };
   } catch (error) {
-    console.log("searchDoc error: ", error.message);
+    console.log("searchDoc error: ", error);
+    return {
+      success: false,
+      message: "Gagal melakukan pencarian",
+      data: [],
+    };
   }
 };
 
