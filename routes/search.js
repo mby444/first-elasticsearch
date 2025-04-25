@@ -8,68 +8,68 @@ searchRouter.get("/", async (req, res) => {
   console.log("q", searchQuery);
   const result = await searchDoc(searchQuery);
   console.log("result", result);
-  res.json(result);
+  // res.json(result);
 
-  // res.json({
-  //   products: [
-  //     {
-  //       name: "Kipas Angin",
-  //       category: "Elektronik",
-  //       description: "Kipas angin hemat daya",
-  //       price: 200000,
-  //       in_stock: true,
-  //     },
-  //     {
-  //       name: "Kipas Angin",
-  //       category: "Elektronik",
-  //       description: "Kipas angin hemat daya",
-  //       price: 200000,
-  //       in_stock: true,
-  //     },
-  //     {
-  //       name: "Kipas Angin",
-  //       category: "Elektronik",
-  //       description: "Kipas angin hemat daya",
-  //       price: 200000,
-  //       in_stock: true,
-  //     },
-  //     {
-  //       name: "Kipas Angin",
-  //       category: "Elektronik",
-  //       description: "Kipas angin hemat daya",
-  //       price: 200000,
-  //       in_stock: true,
-  //     },
-  //     {
-  //       name: "Kipas Angin",
-  //       category: "Elektronik",
-  //       description: "Kipas angin hemat daya",
-  //       price: 200000,
-  //       in_stock: true,
-  //     },
-  //     {
-  //       name: "Kipas Angin",
-  //       category: "Elektronik",
-  //       description: "Kipas angin hemat daya",
-  //       price: 200000,
-  //       in_stock: true,
-  //     },
-  //   ],
-  //   aggregations: {
-  //     total_in_stock: 15,
-  //     count_by_category: [
-  //       { key: "Pakaian", doc_count: 10 },
-  //       { key: "Elektronik", doc_count: 5 },
-  //     ],
-  //     avg_price_by_category: [
-  //       { key: "Pakaian", avg_price: 150000 },
-  //       { key: "Elektronik", avg_price: 500000 },
-  //     ],
-  //   },
-  //   pagination: {
-  //     page: 2,
-  //     totalPages: 5,
-  //     hasNext: true,
-  //   },
-  // });
+  res.json({
+    products: [
+      {
+        name: "Kipas Angin",
+        category: "Elektronik",
+        description: "Kipas angin hemat daya",
+        price: 200000,
+        in_stock: true,
+      },
+      {
+        name: "Kipas Angin",
+        category: "Elektronik",
+        description: "Kipas angin hemat daya",
+        price: 200000,
+        in_stock: true,
+      },
+      {
+        name: "Kipas Angin",
+        category: "Elektronik",
+        description: "Kipas angin hemat daya",
+        price: 200000,
+        in_stock: true,
+      },
+      {
+        name: "Kipas Angin",
+        category: "Elektronik",
+        description: "Kipas angin hemat daya",
+        price: 200000,
+        in_stock: true,
+      },
+      {
+        name: "Kipas Angin",
+        category: "Elektronik",
+        description: "Kipas angin hemat daya",
+        price: 200000,
+        in_stock: true,
+      },
+      {
+        name: "Kipas Angin",
+        category: "Elektronik",
+        description: "Kipas angin hemat daya",
+        price: 200000,
+        in_stock: true,
+      },
+    ],
+    aggregations: {
+      total_in_stock: 15,
+      count_by_category: [
+        { key: "Pakaian", doc_count: 10 },
+        { key: "Elektronik", doc_count: 5 },
+      ],
+      avg_price_by_category: [
+        { key: "Pakaian", avg_price: 150000 },
+        { key: "Elektronik", avg_price: 500000 },
+      ],
+    },
+    pagination: {
+      page: 2,
+      totalPages: 5,
+      hasNext: true,
+    },
+  });
 });
