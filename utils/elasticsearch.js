@@ -24,7 +24,46 @@ export const getDoc = async (id) => {
   }
 };
 
-export const searchDoc = async (query) => {
+const getSortOption = (sort = "") => {
+  const sortTable = {
+    price_asc: {
+      price: {
+        order: "asc",
+      },
+    },
+    price_desc: {
+      price: {
+        order: "desc",
+      },
+    },
+    stock_desc: {
+      stock: {
+        order: "desc",
+      },
+    },
+    rating_desc: {
+      rating: {
+        order: "desc",
+      },
+    },
+  };
+  sort = sort.toLowerCase();
+  let sortOpt = {};
+  const isSortKeyExist = Object.keys(sortTable).includes(sort);
+
+  if (isSortKeyExist) sortOpt = sortTable[sort];
+
+  return sortOpt;
+};
+
+export const searchDoc = async (
+  query,
+  category = null,
+  sort = "",
+  page = 1
+) => {
+  const sortOption = getSortOption(sort);
+
   try {
     const result = await client.search({
       index,
@@ -38,6 +77,7 @@ export const searchDoc = async (query) => {
             ],
           },
         },
+        sort: [sortOption],
       },
     });
 
