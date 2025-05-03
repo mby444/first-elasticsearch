@@ -18,7 +18,8 @@
           <input 
             type="text" 
             id="query" 
-            placeholder="Nama, kategori, deskripsi..." 
+            placeholder="Nama, kategori, deskripsi..."
+            autocomplete="off"
             class="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -72,11 +73,11 @@
   </div>
 
   <script>
-    const form = document.getElementById('searchForm');
-    const resultsDiv = document.getElementById('results');
-    const aggDiv = document.getElementById('aggregation');
+const form = document.getElementById('searchForm');
+const resultsDiv = document.getElementById('results');
+const aggDiv = document.getElementById('aggregation');
 
-    let currentPage = 1;
+let currentPage = 1;
 let hasNextPage = false;
 
 async function fetchResults() {
@@ -92,7 +93,7 @@ async function fetchResults() {
   });
 
   const res = await fetch(`http://localhost:3000/search?${params}`);
-  const { products, aggregations, pagination } = await res.json();
+  const { success, message, data: { products, aggregations, pagination } } = await res.json();
 
   // Aggregasi (sama seperti sebelumnya)
   aggDiv.innerHTML = `
@@ -109,14 +110,17 @@ async function fetchResults() {
     <div class="bg-white p-4 rounded-xl shadow">
       <h3 class="font-semibold mb-1">Rata-Rata Harga per Kategori</h3>
       <ul class="list-disc list-inside text-gray-600">
-        ${aggregations.avg_price_by_category.map(p => `<li>${p.key}: Rp ${p.avg_price.toLocaleString()}</li>`).join("")}
+        ${aggregations.avg_price_by_category.map(p => `<li>${p.key}: Rp${p.avg_price.toLocaleString()}</li>`).join("")}
       </ul>
     </div>
   `;
 
   // Hasil Produk
   resultsDiv.innerHTML = '';
-  if (products.length === 0) {
+  console.log(success);
+  if (!success) {
+    resultsDiv.innerHTML = `<p class="text-center text-gray-500">${message}</p>`;
+  } else if (products.length === 0) {
     resultsDiv.innerHTML = '<p class="text-center text-gray-500">Tidak ada produk ditemukan.</p>';
   } else {
     products.forEach(product => {
@@ -126,9 +130,9 @@ async function fetchResults() {
         <h2 class="text-xl font-semibold mb-1">${product.name}</h2>
         <p class="text-gray-600 text-sm mb-2">${product.category}</p>
         <p class="text-gray-800 mb-2">${product.description}</p>
-        <div class="text-sm text-gray-700">Harga: <strong>Rp ${product.price.toLocaleString()}</strong></div>
-        <div class="text-sm ${product.in_stock ? 'text-green-600' : 'text-red-600'}">
-          ${product.in_stock ? 'Tersedia' : 'Stok Habis'}
+        <div class="text-sm text-gray-700">Harga: <strong>Rp${product.price.toLocaleString()}</strong></div>
+        <div class="text-sm ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}">
+          ${product.stock > 0 ? 'Tersedia' : 'Stok Habis'}
         </div>
       `;
       resultsDiv.appendChild(card);

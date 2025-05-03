@@ -1,5 +1,6 @@
 import { client } from "../clients/elasticsearch.js";
 import { ELASTICSEARCH_INDEX as index } from "../variables/env.js";
+import { ResponseOptions } from "./responseOptions.js";
 
 export const indexDoc = async (id, document) => {
   try {
@@ -8,19 +9,45 @@ export const indexDoc = async (id, document) => {
       id,
       document,
     });
+
+    return new ResponseOptions(
+      true,
+      `Berhasil mengindeks dokumen dengan ID ${id}`,
+      null
+    );
   } catch (error) {
     console.log("indexDoc error: ", error.message);
+
+    return new ResponseOptions(
+      false,
+      `Gagal mengindeks dokumen dengan ID ${id}`,
+      null
+    );
   }
 };
 
 export const getDoc = async (id) => {
   try {
-    await client.get({
+    const result = await client.get({
       index,
       id,
     });
+
+    const data = result.body._source;
+
+    return new ResponseOptions(
+      true,
+      `Berhasil mendapatkan dokumen dengan ID ${id}`,
+      data
+    );
   } catch (error) {
     console.log("getDoc error: ", error.message);
+
+    return new ResponseOptions(
+      false,
+      `Gagal mendapatkan dokumen dengan ID ${id}`,
+      null
+    );
   }
 };
 
@@ -81,20 +108,55 @@ export const searchDoc = async (
       },
     });
 
-    const data = result.body.hits.hits.map((hit) => hit._source);
-
-    return {
-      success: true,
-      message: "",
-      data,
+    const { hits } = result.body;
+    const products = hits.hits.map((hit) => hit._source);
+    const data = {
+      products,
+      aggregations: {
+        total_in_stock: hits.total.value,
+        count_by_category: [
+          { key: "Pakaian", doc_count: 10 },
+          { key: "Elektronik", doc_count: 5 },
+        ],
+        avg_price_by_category: [
+          { key: "Pakaian", avg_price: 150000 },
+          { key: "Elektronik", avg_price: 500000 },
+        ],
+      },
+      pagination: {
+        page: 1,
+        totalPages: 5,
+        hasNext: true,
+      },
     };
+
+    return new ResponseOptions(
+      true,
+      `Berhasil melakukan pencarian dengan query "${query}"`,
+      data
+    );
   } catch (error) {
     console.log("searchDoc error: ", error);
-    return {
-      success: false,
-      message: "Gagal melakukan pencarian",
-      data: [],
+
+    const data = {
+      products: [],
+      aggregations: {
+        total_in_stock: 0,
+        count_by_category: [],
+        avg_price_by_category: [],
+      },
+      pagination: {
+        page: 1,
+        totalPages: 1,
+        hasNext: false,
+      },
     };
+
+    return new ResponseOptions(
+      false,
+      `Gagal melakukan pencarian dengan query "${query}"`,
+      data
+    );
   }
 };
 
@@ -105,8 +167,20 @@ export const updateDoc = async (id, doc) => {
       id,
       doc,
     });
+
+    return new ResponseOptions(
+      true,
+      `Berhasil memperbarui dokumen dengan ID ${id}`,
+      null
+    );
   } catch (error) {
     console.log("updateDoc error: ", error.message);
+
+    return new ResponseOptions(
+      false,
+      `Gagal memperbarui dokumen dengan ID ${id}`,
+      null
+    );
   }
 };
 
@@ -116,7 +190,19 @@ export const deleteDoc = async (id) => {
       index,
       id,
     });
+
+    return new ResponseOptions(
+      true,
+      `Berhasil menghapus dokumen dengan ID ${id}`,
+      null
+    );
   } catch (error) {
     console.log("deleteDoc error: ", error.message);
+
+    return new ResponseOptions(
+      false,
+      `Gagal menghapus dokumen dengan ID ${id}`,
+      null
+    );
   }
 };
